@@ -4,6 +4,9 @@ import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -22,18 +25,23 @@ import com.example.livecoding.adapters.ProductsAdapter;
 import com.example.livecoding.databinding.ActivityCatalogBinding;
 import com.example.livecoding.dialogs.DialogPicker;
 import com.example.livecoding.models.Product;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class CatalogActivity extends AppCompatActivity {
     ActivityCatalogBinding b;
     private ArrayList<Product> products;
     ProductsAdapter adapter;
     private SearchView searchView;
+    public boolean isDragAndDropModeOn;
+    private ItemTouchHelper itemTouchHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +49,8 @@ public class CatalogActivity extends AppCompatActivity {
         setContentView(R.layout.activity_catalog);
         b = ActivityCatalogBinding.inflate(getLayoutInflater());
         setContentView(b.getRoot());
+
+        loadPreviousData();
         setUpProductList();
     }
 
@@ -93,6 +103,32 @@ public class CatalogActivity extends AppCompatActivity {
 
     }
 
+    //Data Save & Reload
+
+    private void saveData() {
+        SharedPreferences preferences = getSharedPreferences("products_data", MODE_PRIVATE);
+        preferences.edit()
+                .putString("data", new Gson().toJson(products))
+                .apply();
+    }
+
+    private void loadPreviousData() {
+        SharedPreferences preferences = getSharedPreferences("products_data", MODE_PRIVATE);
+        String jsonData = preferences.getString("data", null);
+
+        if(jsonData != null)
+            products = new Gson().fromJson(jsonData, new TypeToken<List<Product>>(){}.getType());
+        else
+            products = new ArrayList<>();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        saveData();
+    }
+
     private void setUpProductList() {
         products = new ArrayList<>(Arrays.asList(new Product("apple", 250, 150),
                 new Product("Mango", 200, 300),
@@ -128,6 +164,28 @@ public class CatalogActivity extends AppCompatActivity {
         }
     };
 
+    //Drag & Drop
+
+    private void toggleDragAndDropMode(@NonNull MenuItem item) {
+        changeIconBackground(item);
+
+        if(isDragAndDropModeOn)
+            itemTouchHelper.attachToRecyclerView(null);
+        else
+            itemTouchHelper.attachToRecyclerView(b.recyclerView);
+
+        isDragAndDropModeOn = !isDragAndDropModeOn;
+    }
+
+    private void changeIconBackground(@NonNull MenuItem item) {
+        Drawable icon = item.getIcon();
+        if(isDragAndDropModeOn){
+            icon.setColorFilter(getResources().getColor(R.color.white), PorterDuff.Mode.SRC_ATOP);
+        } else {
+            icon.setColorFilter(getResources().getColor(R.color.black), PorterDuff.Mode.SRC_ATOP);
+        }
+        item.setIcon(icon);
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_catalog_options, menu);
@@ -159,9 +217,16 @@ public class CatalogActivity extends AppCompatActivity {
             case R.id.add_item:
                 addItem();
                 return true;
+
             case R.id.sort:
                 sortByName();
                 return true;
+
+            case R.id.drag_and_drop :
+                toggleDragAndDropMode(item);
+
+                return true;
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -170,7 +235,7 @@ public class CatalogActivity extends AppCompatActivity {
         Collections.sort(adapter.visibleProducts, new Comparator<Product>() {
             @Override
             public int compare(Product o1, Product o2) {
-                return o1.name.compareTo(o2.name);
+                return o1.name.compareToIgnoreCase(o2.name);
             }
         });
         adapter.notifyDataSetChanged();
