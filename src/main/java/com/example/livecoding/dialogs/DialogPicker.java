@@ -91,7 +91,7 @@ public class DialogPicker {
             case R.id.weight_based_radiobtn:
                 String price = b.pricePerKg.getText().toString().trim();
                 String minQty = b.productMinQty.getText().toString().trim();
-                if (price.isEmpty() || minQty.isEmpty() || pName.isEmpty() || !minQty.matches("\\d+(kg|g)")) {
+                if (price.isEmpty() || minQty.isEmpty() || pName.isEmpty() || !minQty.matches("^(\\d{0,2})+(\\.\\d{0,2})?$")) {
                     return false;
                 }
                 product = new Product(pName, Integer.parseInt(price), extractQty(minQty));
@@ -114,7 +114,7 @@ public class DialogPicker {
         String[] vs = variants.split("\n");
 
         for (String s : vs) {
-            if (!(s.matches("^\\w+(\\s|\\w)+,\\d+$"))) {
+            if (!(s.matches("^\\w+(\\s|\\w)*,\\s*\\d+$"))) {
                 Log.e("main", "fucked");
                 return false;
             }
