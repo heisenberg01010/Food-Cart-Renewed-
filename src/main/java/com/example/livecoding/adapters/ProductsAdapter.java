@@ -32,7 +32,9 @@ public class ProductsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public ProductsAdapter(Context context, List<Product> productList) {
         this.context = context;
         allProducts = productList;
-        this.visibleProducts = new ArrayList<>(productList);
+
+        //Dynamic (Changes according to search query), so create at a new address. To avoid data loss
+        visibleProducts = new ArrayList<>(productList);
     }
 
     //Inflate the view for item and create a ViewHolder object and return
@@ -61,7 +63,7 @@ public class ProductsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         if (product.type == Product.WEIGHT_BASED) {
             WeightItemPreviewBinding previewBinding = ((WeightBasedProductVH) holder).binding;
             previewBinding.itemName.setText(product.name);
-            previewBinding.itemMinqty.setText("MinQty " + product.minQty + " kg ");
+            previewBinding.itemMinqty.setText("MinQty " + product.decimalQty(product.minQty) + " kg ");
             previewBinding.itemPrice.setText("\u20B9" + product.price + "");
 
             setUpContextMenu(previewBinding.getRoot());
@@ -88,7 +90,10 @@ public class ProductsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     return;
                 }
 
-                ((CatalogActivity) context).getMenuInflater().inflate(R.menu.contextual_menu, menu);
+                CatalogActivity activity = ((CatalogActivity) context);
+
+                if(!activity.isDragAndDropModeOn)
+                    activity.getMenuInflater().inflate(R.menu.contextual_menu, menu);
             }
         });
     }
