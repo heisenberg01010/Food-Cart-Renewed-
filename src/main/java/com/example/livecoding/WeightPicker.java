@@ -66,10 +66,13 @@ class WeightPicker {
         //Define this method to setup kg & g NumberPickers as per the given ranges
         //kg Range - 0kg to 10kg
         //g Range - 0g to 950g
-        numberPickerg.setMinValue(0);
-        numberPickerg.setMaxValue(19);
-        numberPickerKg.setMinValue(0);
-        numberPickerKg.setMaxValue(10);
+
+        int kg = (int) Math.floor(minQty);
+        numberPickerKg.setMinValue(kg);
+        numberPickerg.setMaxValue(10);
+        int g = (int) (Math.abs(minQty - kg) * 1000);
+        numberPickerg.setMinValue((g);
+        numberPickerKg.setMaxValue(19);
         numberPickerg.setFormatter(new NumberPicker.Formatter() {
             @Override
             public String format(int value) {
