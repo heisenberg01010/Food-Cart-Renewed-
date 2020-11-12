@@ -49,7 +49,7 @@ public class Product implements Serializable {
         variants = new ArrayList<>();
         for (String s : vs) {
             String[] v = s.split(",");
-            variants.add(new Variant(v[0], Integer.parseInt(v[1])));
+            variants.add(new Variant(v[0], Integer.parseInt(v[1].trim())));
             Log.e("main", variants.toString());
         }
     }
@@ -72,5 +72,15 @@ public class Product implements Serializable {
         }
 
         return ((int) minQty) + "kg";
+    }
+
+    public String decimalQty(float minQty) {
+        StringBuilder b = new StringBuilder();
+        int kg = (int) Math.floor(minQty);
+        b.append( kg + "kg");
+
+        int g = (int) (Math.abs(minQty - kg) * 1000);
+        b.append(g + "g");
+        return b.toString();
     }
 }
